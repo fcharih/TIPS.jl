@@ -1,7 +1,9 @@
 using ArgParse
 using Random
+
 using TIPS
 using SPRINT
+using Evolutionary
 
 function main(args)
 
@@ -29,9 +31,12 @@ function main(args)
                             kmer_size = args["kmer_size"])
 
     @info "Computing the fitness of ancestral peptides using computed interaction scores..."
-    @Thread.threads for peptide in peptides
-        peptide.fitness = compute_fitness(peptide.identifier, score_matrix, args["fitness"])
+    @Threads.threads for peptide in peptides
+        peptide.fitness = compute_fitness(peptide.identifier, score_matrix, args["fitness_function"])
     end
+
+    # Initialize tournament
+    tournament_function = tournament(args["tournament_size"], minimize=false)
 
     generation = 1
     while generation < args["max_generations"]
@@ -39,12 +44,34 @@ function main(args)
         start_time = time()
 
         @info "Applying genetic operators to generate the next generation..."
+        offspring = [copy(peptide) for peptide in peptides]
 
+        # Peptide selection
+        fitnesses = [peptide.fitness for peptide in peptides]
+        peptide_selection = tournament_function(fitnesses, args["population_size"])
 
+        for (i, num) in enumerate(peptide_selection)
+            for _ in num
+                push!(offspring, Peptide(peptides[i].sequence))
+            end
+        end
+
+        # Crossover
+        shuffle!(offspring)
+        for i in 1:floor(length(offspring)/2)
+            crossover!(offspring[i], offspring[i + 1])
+        end
+
+        # Mutate
+        for peptide in offspring
+            if rand(Float32) < args["mutation_probability"]
+                mutate!(peptide, args["mutation_rate"])
+            end
+        end
 
         @info "Computing the interaction scores of newly generated peptides..."
         score_matrix = score_peptides(proteins,
-                            [(p.identifier, p.sequence) for p in peptides],
+                            [(p.identifier, p.sequence) for p in offspring],
                             hsps,
                             training_pairs;
                             smer_sim_threshold = args["smer_similarity_threshold"],
@@ -52,7 +79,7 @@ function main(args)
                             kmer_size = args["kmer_size"])
 
         @info "Computing the fitness of the new peptides..."
-        @Thread.threads for peptide in peptides
+        @Threads.threads for peptide in peptides
             peptide.fitness = compute_fitness(peptide.identifier, score_matrix, args["fitness_function"])
         end
 
@@ -60,6 +87,7 @@ function main(args)
 
         @info "ITERATION $(generation) COMPLETE!"
         generation += 1
+        peptides = [copy(peptide) for peptide in offspring]
     end
 end
 

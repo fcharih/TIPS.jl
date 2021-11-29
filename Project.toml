@@ -1,8 +1,9 @@
-name = "TIPS.jl"
+name = "TIPS"
 uuid = "1eaa7590-51ef-48df-949b-9f60609cbd5c"
 authors = ["Francois Charih <francois@charih.ca>"]
 version = "0.1.0"
 
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
+Evolutionary = "86b6b26d-c046-49b6-aa0b-5f0f74682bd6"
 SPRINT = "07c91266-7750-4f70-8c2e-83e76b3c39ee"
