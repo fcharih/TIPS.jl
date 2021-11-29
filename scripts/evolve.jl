@@ -44,7 +44,7 @@ function main(args)
         start_time = time()
 
         @info "Applying genetic operators to generate the next generation..."
-        offspring = [copy(peptide) for peptide in peptides]
+        offspring = []
 
         # Peptide selection
         fitnesses = [peptide.fitness for peptide in peptides]
