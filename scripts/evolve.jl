@@ -10,7 +10,7 @@ using Distributed
 @everywhere using SPRINT.DataTypes
 @everywhere using Evolutionary
 
-function run_trial(run_index::Int64, proteins::Vector{Protein}, hsps::Set{HSP}, training_pairs::Vector{Vector{String}}, args)::Bool
+function run_trial(run_index::Int64, proteins::Vector{Protein}, hsps::Set{HSP}, training_pairs::Vector{Vector{String}}, args)
 
     run_dir = "$(args["output"])/run$(run_index)"
     mkdir(run_dir)
@@ -22,7 +22,7 @@ function run_trial(run_index::Int64, proteins::Vector{Protein}, hsps::Set{HSP}, 
     end
 
     @info "Initializing a population of $(args["population_size"]) peptides..."
-    Random.seed!(run_index)
+    Random.seed!(rand(1:100))
     peptides = [random_peptide("0-$(i)", args["peptide_length"]) for i in 1:args["population_size"]]
 
     @info "Scoring the ancestral peptide population..."
@@ -118,6 +118,7 @@ function run_trial(run_index::Int64, proteins::Vector{Protein}, hsps::Set{HSP}, 
         end
 
         if iterations_since_change ≥ args["convergence_iterations"]
+            @info "======== CONVERGED ========"
             return
         end
     end
