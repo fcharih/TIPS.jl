@@ -59,11 +59,9 @@ function run_trial(run_index::Int64, proteins::Vector{Protein}, hsps::Set{HSP}, 
         fitnesses = [peptide.fitness for peptide in peptides]
         peptide_selection = tournament_function(fitnesses, args["population_size"])
 
-        for (i, num) in enumerate(peptide_selection)
-            for _ in num
-                peptide_id = "$(generation)-$(length(offspring) + 1)"
-                push!(offspring, Peptide(peptide_id, peptides[i].sequence))
-            end
+        for (i, index_of_selected) in enumerate(peptide_selection)
+            peptide_id = "$(generation)-$(length(offspring) + 1)"
+            push!(offspring, Peptide(peptide_id, peptides[index_of_selected].sequence))
         end
 
         # Crossover
