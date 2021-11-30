@@ -111,7 +111,9 @@ function run_trial(run_index::Int64, proteins::Vector{Protein}, hsps::Set{HSP}, 
             fittest_to_date = fittest 
         end
 
-        if (fittest - fittest_to_date) < args["convergence_variation"]
+        if fittest - fittest_to_date > args["convergence_variation"]
+            iterations_since_change = 0
+        else
             iterations_since_change += 1
         end
 
