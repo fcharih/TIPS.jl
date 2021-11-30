@@ -231,7 +231,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
             help = "Number of peptides involved in a selection tournament."
         "--fitness_function"
             arg_type = String
-            default = "mots < 140 ? 0 : ts * (1 - tr/n_prot)"
+            default = "mots > 140 ? 0 : ts * (1 - tr/n_prot)"
             required = false
             help = "Fitness function."
         "--output", "-o"
