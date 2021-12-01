@@ -1,4 +1,7 @@
-function save_peptides(filepath::String, peptides::Vector{Peptide})
+using FASTX
+
+function save_peptides_csv(filepath::String, peptides::Vector{Peptide})
+    # Write a CSV file
     open(filepath, "w") do io
         write(io, "id,sequence,target_score,target_rank,max_off_target_score,max_off_target_rank,fitness\n")
         for (index, peptide) in enumerate(peptides)
@@ -6,6 +9,19 @@ function save_peptides(filepath::String, peptides::Vector{Peptide})
         end
     end
 end
+
+function save_peptides_fasta(filepath::String, peptides::Vector{Peptide})
+    sorted = sort(peptides, by = p -> p.id)
+    open(filepath, "w") do io
+        for peptide in peptides
+            write(io, ">$(peptide.id)\n$(peptide.sequence)\n")
+        end
+    end
+end
+
+
+
+
 
 function update_summary(filepath::String, generation::Int64, duration::AbstractFloat, peptides::Vector{Peptide})
     open(filepath, "a") do io

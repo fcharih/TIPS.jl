@@ -94,7 +94,8 @@ function run_trial(run_index::Int64, proteins::Vector{Protein}, hsps::Set{HSP}, 
 
         @info "Logging the results..."
         update_summary("$(run_dir)/summary.csv", generation, duration, offspring)
-        save_peptides("$(run_dir)/peptides/gen$(generation).csv", offspring)
+        save_peptides_csv("$(run_dir)/peptides/gen$(generation).csv", offspring)
+        save_peptides_fasta("$(run_dir)/peptides/gen$(generation).fasta", offspring)
 
         if args["save_matrices"]
             FileIO.save_matrix("$(matrices_dir)/gen$(generation).mat")
