@@ -106,11 +106,8 @@ function run_trial(run_index::Int64, proteins::Vector{Protein}, hsps::Set{HSP}, 
 
         # TODO check for convergence
         fittest = maximum(map(p -> p.fitness, peptides))
-        if fittest > fittest_to_date
-            fittest_to_date = fittest 
-        end
-
         if fittest - fittest_to_date > args["convergence_variation"]
+            fittest_to_date = fittest
             iterations_since_change = 0
         else
             iterations_since_change += 1
@@ -185,7 +182,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
             help = "Population size (i.e. number of peptides to evolve)."
         "--convergence_variation"
             arg_type = Float64
-            default = 3.0
+            default = 1.0
             required = false
             help = "Width of score braket among which a run is considered to have converged after `convergence_iterations` iterations within that bracket."
         "--convergence_iterations"
