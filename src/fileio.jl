@@ -19,16 +19,12 @@ function save_peptides_fasta(filepath::String, peptides::Vector{Peptide})
     end
 end
 
-
-
-
-
-function update_summary(filepath::String, generation::Int64, duration::AbstractFloat, peptides::Vector{Peptide})
+function update_summary(filepath::String, generation::Int64, duration::AbstractFloat, peptides::Vector{Peptide}, seed::Integer)
     open(filepath, "a") do io
         if generation == 1
-            write(io, "generation,duration,fittest_peptide_id,sequence,target_score,target_rank,max_off_target_score,fitness\n")
+            write(io, "generation,seed,duration,fittest_peptide_id,sequence,target_score,target_rank,max_off_target_score,fitness\n")
         end
         fittest = peptides[argmax(map(p -> p.fitness, peptides))]
-        write(io, "$(generation),$(duration),$(fittest.id),$(fittest.sequence),$(fittest.target_score),$(fittest.target_rank),$(fittest.max_off_target_score),$(fittest.fitness)\n")
+        write(io, "$(generation),$(seed),$(duration),$(fittest.id),$(fittest.sequence),$(fittest.target_score),$(fittest.target_rank),$(fittest.max_off_target_score),$(fittest.fitness)\n")
     end
 end

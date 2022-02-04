@@ -9,10 +9,31 @@ using Distributed
 @everywhere using SPRINT
 @everywhere using SPRINT.DataTypes
 @everywhere using Evolutionary
+@everywhere using CSV
+@everywhere using DataFrames
+
+function isconverged(summary_file, args)::Bool
+    evolution = CSV.File(summary_file) |> DataFrame
+
+    if nrow(evolution) < args["min_generations"]
+        return false
+    end
+
+    # Compute fitness delta
+    Δfitness = []
+    for i in 2:nrow(evolution)
+        push!(Δfitness, evolution.fitness[i] - evolution.fitness[i-1])
+    end
+
+    if all(x -> x < args["convergence_variation"], Δfitness[end - args["convergence_iterations"]:end])
+        return true
+    end
+end
 
 function run_trial(run_index::Int64, proteins::Vector{Protein}, hsps::Set{HSP}, training_pairs::Vector{Vector{String}}, args)
 
     run_dir = "$(args["output"])/run$(run_index)"
+    summary_file = "$(run_dir)/summary.csv"
     mkdir(run_dir)
     mkdir("$(run_dir)/peptides")
 
@@ -22,7 +43,8 @@ function run_trial(run_index::Int64, proteins::Vector{Protein}, hsps::Set{HSP}, 
     end
 
     @info "Initializing a population of $(args["population_size"]) peptides..."
-    Random.seed!(rand(1:100))
+    seed = rand(1:100)
+    Random.seed!(seed)
     peptides = [random_peptide("0-$(i)", args["peptide_length"]) for i in 1:args["population_size"]]
 
     @info "Scoring the ancestral peptide population..."
@@ -93,7 +115,7 @@ function run_trial(run_index::Int64, proteins::Vector{Protein}, hsps::Set{HSP}, 
         @info "ITERATION $(generation) COMPLETED IN $(duration) seconds!"
 
         @info "Logging the results..."
-        update_summary("$(run_dir)/summary.csv", generation, duration, offspring)
+        update_summary(summary_file, generation, duration, offspring, seed)
         save_peptides_csv("$(run_dir)/peptides/gen$(generation).csv", offspring)
         save_peptides_fasta("$(run_dir)/peptides/gen$(generation).fasta", offspring)
 
@@ -104,17 +126,9 @@ function run_trial(run_index::Int64, proteins::Vector{Protein}, hsps::Set{HSP}, 
         peptides = [copy(peptide) for peptide in offspring]
         generation += 1
 
-        # TODO check for convergence
-        fittest = maximum(map(p -> p.fitness, peptides))
-        if fittest - fittest_to_date > args["convergence_variation"]
-            fittest_to_date = fittest
-            iterations_since_change = 0
-        else
-            iterations_since_change += 1
-        end
-
-        if iterations_since_change ≥ args["convergence_iterations"]
-            @info "======== CONVERGED ========"
+        # Check for convergence
+        if isconverged(summary_file, args)
+            @info "======== CONVERGED after $(generation - 1) generations ========"
             return
         end
     end
@@ -180,6 +194,11 @@ if abspath(PROGRAM_FILE) == @__FILE__
             default = 1000
             required = false
             help = "Population size (i.e. number of peptides to evolve)."
+        "--min_generations"
+            arg_type = Int64
+            default = 50
+            required = false
+            help = "Minimum number of generations"
         "--convergence_variation"
             arg_type = Float64
             default = 1.0
